@@ -65,6 +65,14 @@ void* wr_malloc(size_t size, char* id, void *mem_free (struct Node *node), void 
 }
 //
 
+//_______________________strlen for strin pointer_______
+size_t strlen_p(char * s) {
+	char *p = s;	
+    	for (; *p != '\0'; p++);
+    	return (p - s) +1;
+}
+
+//______________________________________________________
 
 
 

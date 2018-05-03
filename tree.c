@@ -59,10 +59,14 @@ static const int version = 100;
 
 void *TerminateTree (struct Node *node) {
 	if (node!=NULL) {
-		for (uint8_t i=node->num; i-->0;) {  // for (int i= number_of_children; i>0; i--)
-			TerminateTree(node->pointer[i]);  //recursia
+		for (register uint8_t i=node->num; i-->0;) {  	// for (int i= number_of_children; i>0; i--)
+			TerminateTree(node->pointer[i]); 	//recursia
 		}
-		free(node);  //I'm freeeee
+
+		 	
+		free(node->data);				//free the array of data
+		free(node->name); 				//free the name, allocated in strdup
+		free(node); 					//I'm freeeee
 	}
 }
 
@@ -74,28 +78,42 @@ void InitTree () {
 		root = NULL;		// make sure root is NULL
 		current = NULL;		// make sure current is NULL
 	}
-	root = create_node();	// creating a root
-	current = root;		// assign current as root
+	root = create_node(NULL);	// creating a root
+	current = root;			// assign current as root
 }
 
 //creating EMPTY node
-struct Node* create_node() {
+struct Node* create_node(char* name) {
 	struct Node* node = (struct Node*)wr_malloc(sizeof(struct Node),"001",TerminateTree,root); // malloc id:1
-	node->num=0; // number of child is 0
-	node->rows = 1; //data rows 1
-	node->name = "Node\0"; // node name
+	node->num=0;								// number of child is 0
+	node->rows = 1; 							//data rows 1
+
+	if (!name)
+		node->name = "Root\0"; 						//in case if it root
+	else {
+		node->name = strdup(name); 					// node name
+	}
 	node->data = (struct Info*)wr_malloc(sizeof(struct Info),"002",TerminateTree,root);//malloc id:2
-	node->data[node->rows-1].input=(char*)"empty\0"; // declare type since field is void*
-	node->data[node->rows-1].type= 1; 		// 1 for string
+	node->data[node->rows-1].input=(char*)"empty\0"; 			// declare type since field is void*
+	node->data[node->rows-1].type= 1; 					// 1 for string
 	return node;
 }
+/*
+//creating another data row
+void adding_node_data_row(struct Node* node) {
+	node->rows++;						//one more row
+	node->data = (struct Info*)realloc(node->data,(node->rows)*sizeof(struct Info*));
+	node->data[node->rows-1].input=(char*)"empty\0";	// declare type since field is void*
+	node->data[node->rows-1].type= 1; 			// 1 for string
+}
+*/
+
 //______________________________________________________
 
 //________________________Child form selection__________
 //Select index of child
 void node_from_number(int p){
 	int k=0;
-	printf("k=%d p=%d\n",k,p);
 	do{
 		current = current->pointer[p] ;	
 		k++;
@@ -106,10 +124,10 @@ void node_from_number(int p){
 //__________________________ADD children_____________
 //Add childrens to the node
 
-void AddChild(struct Node *node, uint8_t n) {
+void AddChild(struct Node *node,char* name ,uint8_t n) {
 	
 	for(uint8_t i=n; i-->0;){                   //loop for terminal mode
-		struct Node* leaf=create_node(); 	// creating child node
+		struct Node* leaf=create_node(name); 	// creating child node
 		if (node->num == 0) {		// if it first child than allocate memory for array
 			node->pointer=(struct Node**)wr_malloc(sizeof(struct  Node*),"003",TerminateTree,root); // malloc id:3 
 		}
@@ -120,6 +138,16 @@ void AddChild(struct Node *node, uint8_t n) {
 		++node->num;	// increment number of children
 	}
 }
+/*
+//Print tree starting from selected node
+void PrintTree(struct Node *node ) {
+	if (node!=NULL) {
+		printf("%s \n",node->name);
+		for (int i=0;i<node->num;i++) 
+			PrintTree(node->pointer[i]);
+	}
+}
+
 
 /*	//ADD into terminal console
 uint8_t n=0;
@@ -168,18 +196,6 @@ void PrintNode(struct Node *node) {
 
 
 
-//Print tree starting from selected node
-void PrintTree(struct Node *node, GtkTreeStore *treestore, GtkTreeIter *toplevel ) {
-	if (node!=NULL) {
-		GtkTreeIter child;
-		gtk_tree_store_append(treestore, &child, toplevel);
-		gtk_tree_store_set(treestore, &child, COLUMN, "here", -1);
-		toplevel=&child;
-		//printf("%d \n",node->data.test);
-		for (int i=0;i<node->num;i++) 
-			PrintTree(node->pointer[i],treestore,toplevel);
-	}
-}
 
 //Move up 
 struct Node *LevelUp(struct Node *goal, struct Node *node) {

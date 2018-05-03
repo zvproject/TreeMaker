@@ -176,6 +176,10 @@ void Init() {
 		GtkWidget *mainbox = gtk_vbox_new(FALSE,3);
 
 			GtkWidget *tree_view = create_empty_tree_model();		//creating new tree
+				GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view)); //init selection 
+				//can save some space here by pasing this selection pointer as argument to functions
+				//remove_child() and add_child()
+				g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(get_selected_node), NULL);
 				gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree_view), FALSE);
 				gtk_container_add(GTK_CONTAINER(topwin),tree_view);
 			gtk_box_pack_start(GTK_BOX(mainbox),topwin,TRUE,TRUE,2);	  	        // topwin container init at 42 line
@@ -428,6 +432,24 @@ GtkWidget *create_empty_tree_model(/*uint8_t mode*/) {            //delete if ex
 
 //______Tree_Control_for_main_Right_box
 
+//set current node to selected iter 
+void get_selected_node(GtkTreeSelection *selection, gpointer none) {
+	GtkTreeIter iter;
+	GtkTreeModel* model;   	
+	gtk_tree_selection_get_selected(selection, &model, &iter);
+
+	GtkTreePath* path = gtk_tree_model_get_path(model,&iter); 	//get path of the iter
+ 	int depth = gtk_tree_path_get_depth(path); 		//get depth of iter of selected row
+	//------------might not work
+	if (current!=root) { 
+		for (int i=0;++i<depth;){
+			node_from_number(gtk_tree_path_get_indices(path)[i-1]);
+		}
+	}
+	gtk_tree_path_free(path); 
+	//------------
+}
+
 // Add child to selected node
 void add_child(GtkWidget* widget, gpointer entry){
 
@@ -440,7 +462,7 @@ void add_child(GtkWidget* widget, gpointer entry){
 
 		if (gtk_tree_selection_get_selected(selection, &model, &iter)) { 
 		
-
+/*
 			GtkTreePath* path = gtk_tree_model_get_path(model,&iter); 	//get path of the iter
  			int depth = gtk_tree_path_get_depth(path); 		//get depth of iter of selected row
 			//------------might not work
@@ -449,9 +471,9 @@ void add_child(GtkWidget* widget, gpointer entry){
 					node_from_number(gtk_tree_path_get_indices(path)[i-1]);
 				}
 			}
-			//------------
-			AddChild(current,1); 
 			gtk_tree_path_free(path); 
+			//------------*/
+			AddChild(current,(char *)gtk_entry_get_text(entry),1); 
 
 			GtkTreeStore *treestore = GTK_TREE_STORE(model);  //a model for tree widgets
 			gtk_tree_store_append(treestore, &child, &iter);  //create a child for selected node
@@ -470,6 +492,8 @@ void remove_child(GtkWidget *widget, gpointer entry){
 	
 	if (tree != NULL) {		//check if NULL to avoid GTK errors
 		GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree)); //find what was selected
+
+
 
 		if (gtk_tree_selection_get_selected(selection, &model, &iter)) { 
 			GtkTreeStore *treestore = GTK_TREE_STORE(model);  //a model for tree widgets
@@ -499,6 +523,7 @@ void add_row_data_type (GtkWidget* widget, GtkWidget *list) {
 		num = reorder_list_colomn_index(gtk_tree_view_get_model(GTK_TREE_VIEW(list)),iter,0); 		// reindex all rows and get index for a new row will increment later	
 	}	
 	gtk_list_store_set(store, &iter, 0 , num, 1,"char",  -1); //set a default info for the new row
+	//adding_node_data_row(current);
 }
 
 

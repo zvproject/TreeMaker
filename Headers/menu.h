@@ -26,8 +26,11 @@ void open_tree (GtkWidget* widget, gpointer data) ;
 
 GtkWidget *create_empty_tree_model(/*uint8_t mode*/) ;
 
+// __________________RIGHT SIDE WINDOW___________
+void get_selected_node(GtkTreeSelection *selection, gpointer none) ;
 void add_child(GtkWidget* widget, gpointer entry);	//add child
 void remove_child(GtkWidget *widget, gpointer entry);	//remove child
+//_______________________________________________
 
 void add_field_data (GtkWidget* widget, gpointer topwin);	//add data field
 //GtkWidget *create_view_and_model(uint8_t mode);
