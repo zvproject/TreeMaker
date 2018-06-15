@@ -22,11 +22,12 @@ void WriteInFile(FILE *file,struct Node* node);
 void SaveTree();
 struct Node* ReadOutOfFile(struct Node *node,FILE * f);
 struct Node* LoadTree (char *fname);
-
-void *TerminateTree (struct Node *node) ; // delete tree, full or partial
+void TerminateAndReindex (struct Node* );
+	void *TerminateTree (struct Node *node) ; // delete tree, full or partial
+	void Reindex(struct Node*, int);
 void InitTree ();		 // init tree
 struct Node* create_node(char*);	 // create single node with empty fields
-void node_from_number(int ); // set current node to the selection from GTK
+void node_from_path(int*, int ); // set current node to the selection from GTK
 void adding_node_data_row(struct Node* node); // adding row data to the node
 
  
