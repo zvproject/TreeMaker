@@ -35,14 +35,13 @@
 
 	struct Info {    //data of the single leaf
 		//dType* info;
-		void* input;
-		uint8_t* type; // 0 if it is int, float of string; other number is a number of ellements in array for any array type			
-		uint8_t num;
+		void* ;
+		uint8_t type; // 0 if it is int, float of string; other number is a number of ellements in array for any array type			
 	};
 
 struct Node{		
-	struct Info data;   	// array of data
-	int rows;
+	struct Info* data;   	// array of data
+	uint8_t rows;           // number of data
 	char *name;		// node name
 	struct Node** pointer;  // array of pointer for children
 	struct Node* parent; 	// pointer to parent
@@ -63,6 +62,7 @@ void *TerminateTree (struct Node *node) {
 		}
 
 		free(node->name); 				//free the name, allocated in strdup
+		free(node->data);				//free array of data
 		free(node); 					//I'm freeeees
 	}
 }
@@ -105,24 +105,45 @@ void InitTree () {
 struct Node* create_node(char* name) {
 	struct Node* node = (struct Node*)wr_malloc(sizeof(struct Node),"001",TerminateTree,root); // malloc id:1
 	node->num=0;								// number of child is 0
-	node->rows = 1; 							//data rows 1
 	if (!name)
 		name = "Root\0"; 
-	node->name = strdup(name); 					// node name
-	//node->data = (struct Info*)wr_malloc(sizeof(struct Info),"002",TerminateTree,root);//malloc id:2
-	//node->data[node->rows-1].input=(char*)"empty\0"; 			// declare type since field is void*
-	//node->data[node->rows-1].type= 1; 					// 1 for string
+	node->name = strdup(name); // node name
+	node->rows = 1;					
+	node->data = (struct Info*)wr_malloc(sizeof(struct Info),"002",TerminateTree,root);//malloc id:2
+	node->data->input = (char*)"empty\0";					// declare type since field is void*
+	node->data->type = 3;
 	return node;
 }
-/*
-//creating another data row
-void adding_node_data_row(struct Node* node) {
-	node->rows++;						//one more row
-	node->data = (struct Info*)realloc(node->data,(node->rows)*sizeof(struct Info*));
-	node->data[node->rows-1].input=(char*)"empty\0";	// declare type since field is void*
-	node->data[node->rows-1].type= 1; 			// 1 for string
+
+void data_row (bool flag, uint8_t position, struct Node* node) {   
+//false to remove element, true add element ; position - position to add or remove
+	static counter = 0;
+	const uint8_t n = 4;	//change if need bigger region than 4
+	if (flag) {
+		if (node->data == counter) {
+			node->data = (struct Info*)realloc(node->data,(node->rows+n)*sizeof(struct Info*));  // allocate memory region
+			for (register uint8_t i=rows; i<row+n;i++)
+				node->data[i] = NULL;
+		}
+		add_node_data_row(node);
+	}
+	else 
+		remove_node_data_row(node);
 }
-*/
+
+	//creating another data row
+	void add_node_data_row(struct Node* node) {
+		node->raws++;
+		node->data[node->rows-1].input = (char*)"empty\0";	// declare type since field is void*, only for the first ellement
+		node->data[node->rows-1].type = 3; 			// 1 for string, only for the first element
+	}
+
+	//remove last data ro
+	void remove_node_data_row(struct Node* node) {
+		node->rows--;
+		free node->data[node->rows]
+	}
+
 
 //______________________________________________________
 
