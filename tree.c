@@ -35,23 +35,25 @@
 
 	struct Info {    //data of the single leaf
 		//dType* info;
-		void* ;
+		void* input;
 		uint8_t type; // 0 if it is int, float of string; other number is a number of ellements in array for any array type			
 	};
 
 struct Node{		
+	char *name;				// node name
+	struct Node** pointer;  // array of pointers for children
+	struct Node* parent; 	// pointer to parent
+	int num; 				// number of children
+
 	struct Info* data;   	// array of data
 	uint8_t rows;           // number of data
-	char *name;		// node name
-	struct Node** pointer;  // array of pointer for children
-	struct Node* parent; 	// pointer to parent
-	int num; 		// number of children
 } *root=NULL,*current=NULL;
 
 static const char* signature = "ZVProject";
 static const int version = 100;
+static const int DEFAULT_SIZE = 5;
 
-//____________________init & delete___________
+//____________________init & destruct___________
 
 //Destroy tree starting from node
 void *TerminateTree (struct Node *node) {
@@ -67,7 +69,56 @@ void *TerminateTree (struct Node *node) {
 	}
 }
 
-//Reindex elements of parent array of children after removing on of them 
+//init tree 
+void InitTree () {
+	if ((root) || (current)) {	// check if pointers for root and current exists
+		current=root;		// make current node our root
+		TerminateTree(root);	// delete tree if exist
+		root = NULL;		// make sure root is NULL
+		current = NULL;		// make sure current is NULL
+	}
+	root = create_node(NULL);	// creating a root
+	root->parent=NULL;
+	current = root;			// assign current as root
+}
+//_________________Tree Nodes___________________
+
+//create EMPTY node
+struct Node* create_node(char* name) {
+	struct Node* node = (struct Node*)wr_malloc(sizeof(struct Node),"001",TerminateTree,root); // malloc id:1
+	node->num=0;								// number of child is 0
+	if (!name)
+		name = "Root\0"; 
+	node->name = strdup(name); // node name
+	//node->rows = 1;					
+	//node->data = (struct Info*)wr_malloc(sizeof(struct Info),"002",TerminateTree,root);//malloc id:2
+	//node->data->input = (char*)"empty\0";					// declare type since field is void*
+	//node->data->type = -1;
+	return node;
+}
+
+//!!!! ALLOCATE more space *size
+void AddChild(struct Node *node,char* name ,uint8_t n) {
+	
+	for(register uint8_t i=n; i-->0;){                   //loop for terminal mode
+		struct Node* leaf=create_node(name); 	// creating child node
+		if (node->num == 0) {		// if it first child than allocate memory for array
+			node->pointer=(struct Node**)wr_malloc(sizeof(struct  Node*)*DEFAULT_SIZE,"003",TerminateTree,root); // malloc id:3 
+		}
+		else
+			if (node->num%5 == 0){
+				node->pointer=(struct Node**)realloc(node->pointer,(node->num+DEFAULT_SIZE)*sizeof(struct Node*));
+				for(register uint8_t i=node->num; i<node->num+DEFAULT_SIZE; i++ )
+					num->pointer = NULL;
+			}
+		node->pointer[node->num]=leaf; //assign new child
+		leaf->parent = node;
+		++node->num;	// increment number of children
+	}
+}
+//!!!!No memmove do the loop poiter NULL
+//memmove vs for loop
+//Reindex elements of parent array of children after removing one of them 
 void Reindex(struct Node *node, int index) {	
 	memmove(node->pointer+index, node->pointer+index+1,(node->num-1-index)*sizeof(struct Node*));
 	node->pointer[node->num--]=NULL;
@@ -87,34 +138,58 @@ void TerminateAndReindex (struct Node *node ) {
 	PrintTree(root);
 }
 
-//init tree 
-void InitTree () {
-	if ((root) || (current)) {	// check if pointers for root and current exists
-		current=root;		// make current node our root
-		TerminateTree(root);	// delete tree if exist
-		root = NULL;		// make sure root is NULL
-		current = NULL;		// make sure current is NULL
+//_________________Tree Node Info_______________________
+
+//Print tree starting from selected node
+void PrintTree(struct Node *node ) {
+	if (node!=NULL) {
+		printf("m=%d ",node->num);
+		//printf("%s ",node->name);
+		for (int i=0;i<node->num;i++) {
+			PrintTree(node->pointer[i]);
+		}
 	}
-	root = create_node(NULL);	// creating a root
-	root->parent=NULL;
-	current = root;			// assign current as root
-}
-//____________________________________________________
-
-//creating EMPTY node
-struct Node* create_node(char* name) {
-	struct Node* node = (struct Node*)wr_malloc(sizeof(struct Node),"001",TerminateTree,root); // malloc id:1
-	node->num=0;								// number of child is 0
-	if (!name)
-		name = "Root\0"; 
-	node->name = strdup(name); // node name
-	node->rows = 1;					
-	node->data = (struct Info*)wr_malloc(sizeof(struct Info),"002",TerminateTree,root);//malloc id:2
-	node->data->input = (char*)"empty\0";					// declare type since field is void*
-	node->data->type = 3;
-	return node;
+	printf("\n");
 }
 
+
+
+//_________________Tree Navigation________________________
+
+
+//Select index of child
+void node_from_path(int* path, int depth){  		//array of [depth] ellement
+	current= root;					//set up to the begining
+	for (register uint8_t k=0; ++k<depth;) {	//get depth-1 times
+		current=current->pointer[path[k]];	//get index for next position from path array
+	}	
+}
+
+
+//Move up from top
+//not useful since we have pointer to parent
+struct Node *UpFromTop(struct Node *goal, struct Node *node) {
+	for (uint8_t j=node->num; j-->0;) 
+		if (node->pointer[j]==goal) 
+			return node;		
+	for (uint8_t i=node->num; i-->0;) {
+		struct Node* tmp = UpFromTop(goal,node->pointer[i]);
+		if (tmp!=NULL) 
+			return tmp;
+	}
+	return NULL;						
+}	
+
+struct Node *NodeUp(struct *node ){
+	
+};
+
+struct Node *NodeFromPath(int* path, int depth){
+	
+};
+
+
+/*
 void data_row (bool flag, uint8_t position, struct Node* node) {   
 //false to remove element, true add element ; position - position to add or remove
 	static counter = 0;
@@ -129,8 +204,8 @@ void data_row (bool flag, uint8_t position, struct Node* node) {
 	}
 	else 
 		remove_node_data_row(node);
-}
-
+}*/
+/*
 	//creating another data row
 	void add_node_data_row(struct Node* node) {
 		node->raws++;
@@ -138,55 +213,24 @@ void data_row (bool flag, uint8_t position, struct Node* node) {
 		node->data[node->rows-1].type = 3; 			// 1 for string, only for the first element
 	}
 
-	//remove last data ro
+	//remove last data row
 	void remove_node_data_row(struct Node* node) {
 		node->rows--;
 		free node->data[node->rows]
 	}
-
+*/
 
 //______________________________________________________
 
 //________________________Child form selection__________
-//Select index of child
-void node_from_path(int* path, int depth){  		//array of [depth] ellement
-	current= root;					//set up to the begining
-	for (register uint8_t k=0; ++k<depth;) {	//get depth-1 times
-		current=current->pointer[path[k]];	//get index for next position from path array
-	}	
-}
 
 
 //__________________________ADD children_____________
 //Add childrens to the node
 
-void AddChild(struct Node *node,char* name ,uint8_t n) {
-	
-	for(register uint8_t i=n; i-->0;){                   //loop for terminal mode
-		struct Node* leaf=create_node(name); 	// creating child node
-		if (node->num == 0) {		// if it first child than allocate memory for array
-			node->pointer=(struct Node**)wr_malloc(sizeof(struct  Node*),"003",TerminateTree,root); // malloc id:3 
-		}
-		else {
-			node->pointer=(struct Node**)realloc(node->pointer,(node->num+1)*sizeof(struct Node*));
-		}
-		node->pointer[node->num]=leaf; //assign new child
-		leaf->parent = node;
-		++node->num;	// increment number of children
-	}
-}
 
-//Print tree starting from selected node
-void PrintTree(struct Node *node ) {
-	if (node!=NULL) {
-		printf("m=%d ",node->num);
-		//printf("%s ",node->name);
-		for (int i=0;i<node->num;i++) {
-			PrintTree(node->pointer[i]);
-		}
-	}
-	printf("\n");
-}
+
+
 
 
 /*	//ADD into terminal console
@@ -237,18 +281,7 @@ void PrintNode(struct Node *node) {
 
 
 
-//Move up 
-struct Node *LevelUp(struct Node *goal, struct Node *node) {
-	for (uint8_t j=node->num; j-->0;) 
-		if (node->pointer[j]==goal) 
-			return node;		
-	for (uint8_t i=node->num; i-->0;) {
-		struct Node* tmp = LevelUp(goal,node->pointer[i]);
-		if (tmp!=NULL) 
-			return tmp;
-	}
-	return NULL;						
-}	
+
 
 //Add leaf to the trunk with existet children, move all existed children on one level down
 void GrowLeaf(struct Node *node) {  
@@ -381,3 +414,13 @@ struct Node* Door () {
 
 
 */
+
+
+void* TypeDefiner(void* variable, int type){
+	switch(type){
+		case 0: {
+			return (int)varaible;
+			break;
+		}
+	}
+}
